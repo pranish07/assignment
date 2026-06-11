@@ -8,19 +8,37 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 import os
 
-# Configuration (In a real app, these would be in environment variables)
-SECRET_KEY = "super-secret-key-for-techkraft-assignment"
+import os
+import hashlib
+
+# Configuration
+SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key-for-techkraft-assignment")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
+def _hash_password_precheck(password: str) -> str:
+    # bcrypt has a 72-byte limit. We'll SHA-256 hash it first to ensure it's always within limits.
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    # Try new way (with SHA-256 pre-hash) to support long passwords
+    try:
+        if pwd_context.verify(_hash_password_precheck(plain_password), hashed_password):
+            return True
+    except Exception:
+        pass
+    
+    # Try old way (raw bcrypt) as fallback for existing hashes
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return pwd_context.hash(_hash_password_precheck(password))
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

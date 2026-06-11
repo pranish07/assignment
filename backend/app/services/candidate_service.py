@@ -15,7 +15,7 @@ class CandidateService:
         skip: int = 0, 
         limit: int = 20
     ):
-        query = db.query(models.Candidate)
+        query = db.query(models.Candidate).filter(models.Candidate.status != "archived")
         
         # This is where the "Debugging Signal" fix goes - filter in DB, not in Python
         if status:
@@ -93,3 +93,13 @@ class CandidateService:
             db.refresh(candidate)
             return summary
         return None
+
+    @staticmethod
+    def archive_candidate(db: Session, candidate_id: int):
+        candidate = db.query(models.Candidate).filter(models.Candidate.id == candidate_id).first()
+        if candidate:
+            candidate.status = "archived"
+            db.commit()
+            db.refresh(candidate)
+            return True
+        return False

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const client = axios.create({
   baseURL: API_URL,
@@ -51,6 +51,10 @@ export const candidatesApi = {
   },
   update: async (id, updateData) => {
     const { data } = await client.patch(`/candidates/${id}`, updateData);
+    return data;
+  },
+  delete: async (id) => {
+    const { data } = await client.delete(`/candidates/${id}`);
     return data;
   }
 };

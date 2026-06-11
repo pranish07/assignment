@@ -103,3 +103,13 @@ async def stream_candidate_updates(id: int, current_user: models.User = Depends(
             await asyncio.sleep(5)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+@router.delete("/{id}")
+def delete_candidate(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin)
+):
+    success = CandidateService.archive_candidate(db, id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return {"message": "Candidate archived successfully"}

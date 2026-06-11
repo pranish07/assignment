@@ -70,11 +70,16 @@ The logic performs **Application-level filtering**. It fetches the entire datase
 - **Bandwidth**: Huge amounts of unnecessary data are transferred between the DB and the App.
 
 ### Correct Approach
-Use **Database-level filtering** with `WHERE` clauses and indexes:
+Use **Database-level filtering** with `WHERE` clauses and indexes. In SQLAlchemy (used in this project):
 ```python
-# Use SQLAlchemy or raw SQL with parameters
-query = "SELECT * FROM candidates WHERE status = %s"
-db.execute(query, (status,))
+# The filtering happens in the SQL engine, not Python memory
+query = db.query(models.Candidate).filter(models.Candidate.status == status)
+result = query.offset(skip).limit(limit).all()
+```
+Or raw SQL with proper parameterization:
+```sql
+-- SQLite uses ? for parameters
+SELECT * FROM candidates WHERE status = ? LIMIT 20 OFFSET 0;
 ```
 
 ---

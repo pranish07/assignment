@@ -49,10 +49,12 @@ const CandidateDetail = ({ user }) => {
         try {
             await candidatesApi.triggerSummary(id);
             // Poll or just wait a bit for the mock
-            setTimeout(fetchCandidate, 3000);
+            setTimeout(async () => {
+                await fetchCandidate();
+                setGenerating(false);
+            }, 3000);
         } catch (err) {
             alert('Error triggering summary');
-        } finally {
             setGenerating(false);
         }
     };
@@ -63,6 +65,17 @@ const CandidateDetail = ({ user }) => {
             alert('Notes saved successfully');
         } catch (err) {
             alert('Error saving notes');
+        }
+    };
+
+    const handleArchive = async () => {
+        if (window.confirm('Are you sure you want to archive this candidate? They will no longer appear in the main list.')) {
+            try {
+                await candidatesApi.delete(id);
+                navigate('/');
+            } catch (err) {
+                alert('Error archiving candidate');
+            }
         }
     };
 
@@ -201,8 +214,11 @@ const CandidateDetail = ({ user }) => {
                                     placeholder="Private documentation for admins..."
                                 />
                             </div>
-                            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={handleSaveInternalNotes}>
+                            <button className="btn btn-secondary" style={{ width: '100%', marginBottom: '1rem' }} onClick={handleSaveInternalNotes}>
                                 Update Internal Notes
+                            </button>
+                            <button className="btn btn-secondary" style={{ width: '100%', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={handleArchive}>
+                                Archive Candidate
                             </button>
                         </div>
                     )}
