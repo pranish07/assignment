@@ -13,7 +13,7 @@ class CandidateService:
         skill: str = None, 
         keyword: str = None, 
         skip: int = 0, 
-        limit: int = 20
+        limit: int = 10
     ):
         query = db.query(models.Candidate).filter(models.Candidate.status != "archived")
         

@@ -12,6 +12,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(String) # 'admin' or 'reviewer'
+    refresh_token = Column(String, nullable=True)
 
 class Candidate(Base):
     __tablename__ = "candidates"

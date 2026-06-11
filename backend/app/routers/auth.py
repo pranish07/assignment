@@ -36,7 +36,45 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = auth.create_access_token(
         data={"sub": user.email, "role": user.role}
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = auth.create_refresh_token(
+        data={"sub": user.email}
+    )
+    
+    user.refresh_token = refresh_token
+    db.commit()
+    
+    return {
+        "access_token": access_token, 
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+@router.post("/refresh", response_model=schemas.Token)
+def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.refresh_token == refresh_token).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+    
+    # In a real app, you'd also verify the JWT expiry of the refresh token
+    
+    new_access_token = auth.create_access_token(
+        data={"sub": user.email, "role": user.role}
+    )
+    # Optional: Rotate refresh token
+    new_refresh_token = auth.create_refresh_token(
+        data={"sub": user.email}
+    )
+    user.refresh_token = new_refresh_token
+    db.commit()
+    
+    return {
+        "access_token": new_access_token, 
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }
 
 @router.get("/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):

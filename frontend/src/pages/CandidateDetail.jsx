@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { candidatesApi } from '../api/client';
-import { ArrowLeft, Star, Sparkles, Send, Shield, Info, Clock } from 'lucide-react';
+import { ArrowLeft, Star, Sparkles, Send, Shield, Info, Clock, Trash2 } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const CandidateDetail = ({ user }) => {
     const { id } = useParams();
@@ -12,6 +14,7 @@ const CandidateDetail = ({ user }) => {
     const [submitting, setSubmitting] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [internalNotes, setInternalNotes] = useState('');
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
 
     const fetchCandidate = async () => {
         try {
@@ -69,17 +72,60 @@ const CandidateDetail = ({ user }) => {
     };
 
     const handleArchive = async () => {
-        if (window.confirm('Are you sure you want to archive this candidate? They will no longer appear in the main list.')) {
-            try {
-                await candidatesApi.delete(id);
-                navigate('/');
-            } catch (err) {
-                alert('Error archiving candidate');
-            }
+        try {
+            await candidatesApi.delete(id);
+            navigate('/');
+        } catch (err) {
+            alert('Error archiving candidate');
         }
     };
 
-    if (loading) return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading profile...</div>;
+    if (loading) return (
+        <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+            <div className="skeleton" style={{ width: '160px', height: '20px', marginBottom: '2rem' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div className="card" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                        <div className="skeleton" style={{ width: '80px', height: '80px', borderRadius: '24px' }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                            <div className="skeleton" style={{ width: '200px', height: '24px' }} />
+                            <div className="skeleton" style={{ width: '280px', height: '14px' }} />
+                        </div>
+                    </div>
+                    <div className="card" style={{ minHeight: '120px' }}>
+                        <div className="skeleton" style={{ width: '140px', height: '20px', marginBottom: '1rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '12px', marginBottom: '0.5rem' }} />
+                        <div className="skeleton" style={{ width: '80%', height: '12px', marginBottom: '0.5rem' }} />
+                        <div className="skeleton" style={{ width: '60%', height: '12px' }} />
+                    </div>
+                    <div className="card" style={{ minHeight: '200px' }}>
+                        <div className="skeleton" style={{ width: '160px', height: '20px', marginBottom: '1rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '60px', borderRadius: '8px', marginBottom: '0.75rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '60px', borderRadius: '8px' }} />
+                    </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div className="card" style={{ minHeight: '300px' }}>
+                        <div className="skeleton" style={{ width: '140px', height: '20px', marginBottom: '1.5rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '40px', borderRadius: '8px', marginBottom: '1rem' }} />
+                        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                            {[1, 2, 3, 4, 5].map(n => (
+                                <div key={n} className="skeleton" style={{ flex: 1, height: '36px', borderRadius: '6px' }} />
+                            ))}
+                        </div>
+                        <div className="skeleton" style={{ width: '100%', height: '80px', borderRadius: '8px', marginBottom: '1.5rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '40px', borderRadius: '8px' }} />
+                    </div>
+                    <div className="card" style={{ minHeight: '200px' }}>
+                        <div className="skeleton" style={{ width: '120px', height: '20px', marginBottom: '1rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '80px', borderRadius: '8px', marginBottom: '1rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '36px', borderRadius: '8px', marginBottom: '0.75rem' }} />
+                        <div className="skeleton" style={{ width: '100%', height: '36px', borderRadius: '8px' }} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
@@ -156,15 +202,17 @@ const CandidateDetail = ({ user }) => {
                     <div className="card">
                         <h3 style={{ marginBottom: '1.5rem', fontSize: '1.125rem', fontWeight: '700' }}>Add Assessment</h3>
                         <form onSubmit={handleScoreSubmit}>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Category</label>
-                                <select className="input" value={scoreForm.category} onChange={e => setScoreForm({ ...scoreForm, category: e.target.value })}>
-                                    <option>Technical</option>
-                                    <option>Communication</option>
-                                    <option>Cultural Fit</option>
-                                    <option>Problem Solving</option>
-                                </select>
-                            </div>
+                            <CustomSelect
+                                label="Category"
+                                value={scoreForm.category}
+                                onChange={(val) => setScoreForm({ ...scoreForm, category: val })}
+                                options={[
+                                    { value: 'Technical', label: 'Technical' },
+                                    { value: 'Communication', label: 'Communication' },
+                                    { value: 'Cultural Fit', label: 'Cultural Fit' },
+                                    { value: 'Problem Solving', label: 'Problem Solving' },
+                                ]}
+                            />
                             <div style={{ marginBottom: '1rem' }}>
                                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Rating (1-5)</label>
                                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between' }}>
@@ -217,8 +265,8 @@ const CandidateDetail = ({ user }) => {
                             <button className="btn btn-secondary" style={{ width: '100%', marginBottom: '1rem' }} onClick={handleSaveInternalNotes}>
                                 Update Internal Notes
                             </button>
-                            <button className="btn btn-secondary" style={{ width: '100%', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={handleArchive}>
-                                Archive Candidate
+                            <button className="btn btn-secondary" style={{ width: '100%', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={() => setIsArchiveModalOpen(true)}>
+                                <Trash2 size={18} /> Archive Candidate
                             </button>
                         </div>
                     )}
@@ -244,6 +292,15 @@ const CandidateDetail = ({ user }) => {
                     </div>
                 </div>
             </div>
+            <ConfirmationModal
+                isOpen={isArchiveModalOpen}
+                onClose={() => setIsArchiveModalOpen(false)}
+                onConfirm={handleArchive}
+                title="Archive Candidate"
+                message={`Are you sure you want to archive ${candidate.name}? They will be removed from the active recruitment list.`}
+                confirmText="Archive"
+                type="danger"
+            />
         </div>
     );
 };

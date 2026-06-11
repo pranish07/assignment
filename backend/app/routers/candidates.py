@@ -17,7 +17,7 @@ def get_candidates(
     skill: Optional[str] = None,
     keyword: Optional[str] = None,
     page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=50),
+    size: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):

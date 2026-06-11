@@ -6,7 +6,7 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - DATABASE_URL=sqlite:///./techkraft.db
+      - DATABASE_URL=sqlite:////tmp/techkraft.db
 
   frontend:
     build: ./frontend
